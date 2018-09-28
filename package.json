@@ -1,0 +1,26 @@
+{
+  "name": "new-forest",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.323.0",
+    "dotenv": "^6.0.0",
+    "jszip": "^3.1.5",
+    "multi-progress": "^2.0.0",
+    "ora": "^3.0.0",
+    "plotly": "^1.0.6",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.2",
+    "socket.io": "^2.1.1",
+    "technicalindicators": "^1.1.13",
+    "winston": "^3.1.0",
+    "ws": "^6.0.0"
+  }
+}

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.0/socket.io.js"></script>
+  </head>
+  <body>
+    <div id="graph"></div>
+    <div id="graph2"></div>
+    <script>
+
+
+     const socket = io('localhost:8080');
+     let exists = false;
+     socket.on('data', data => {
+       var time = new Date();
+       if (!exists) {
+         var emaData = [{
+           x: [time],
+           y: [data.EMA8],
+           mode: 'lines',
+           name: 'EMA8',
+           line: {color: '#0000FF'}
+         }, {
+           x: [time],
+           y: [data.EMA13],
+           mode: 'lines',
+           name: 'EMA13',
+           line: {color: '#00FF00'}
+         }, {
+           x: [time],
+           y: [data.EMA21],
+           mode: 'lines',
+           name: 'EMA21',
+           line: {color: '#FFFF00'}
+         }, {
+           x: [time],
+           y: [data.EMA55],
+           mode: 'lines',
+           name: 'EMA55',
+           line: {color: '#FF0000'}
+         }, {
+          x: [time],
+          y: [data.currentPrice],
+          mode: 'markers',
+          name: 'BUY',
+          marker: {color: '#00FF00'}
+        }, {
+          x: [time],
+          y: [data.currentPrice],
+          mode: 'markers',
+          name: 'SELL',
+          marker: {color: '#FF0000'}
+        }, {
+          x: [time],
+          y: [data.currentPrice],
+          mode: 'markers',
+          name: 'NOTHING',
+          marker: {color: '#000000'}
+        }]
+         Plotly.plot('graph', emaData);
+
+         var rsiData = [{
+           x: [time],
+           y: [data.STOCHRSI.percentK],
+           mode: 'lines',
+           name: 'K',
+           line: {color: '#0000FF'}
+         }, {
+           x: [time],
+           y: [data.STOCHRSI.percentD],
+           mode: 'lines',
+           name: 'D',
+           line: {color: '#00FF00'}
+         }]
+         Plotly.plot('graph2', rsiData);
+
+         exists = true;
+       } else {
+         // BUY = 4 SELL = 5
+        var updateEma = {
+          x:  [[time], [time], [time], [time], [time]],
+          y: [[data.EMA8], [data.EMA13], [data.EMA21], [data.EMA55], [data.currentPrice]]
+        }
+        var element = 6;
+         if (data.action === 'SELL') element = 5;
+         if (data.action === 'BUY') element = 4
+        Plotly.extendTraces('graph', updateEma, [0, 1, 2, 3, element])
+
+         var updateRsi = {
+           x:  [[time], [time]],
+           y: [[data.STOCHRSI.percentK], [data.STOCHRSI.percentD]]
+         }
+
+         Plotly.extendTraces('graph2', updateRsi, [0, 1])
+           }
+         });
+    </script>
+  </body>
+</html>
