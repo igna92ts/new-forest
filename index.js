@@ -57,11 +57,15 @@ const exclude = (excludeProps, features) => {
 
 const run = async () => {
   const symbol = 'XRPETH';
-  const historic = await fetchKLines(symbol, 5000);
+  const historic = await fetchKLines(symbol, 10000);
   const { advancedHistoric, features } = advancedFeatures(historic);
   const trainingData = expectedAction(advancedHistoric);
   const constrainedFeatures = exclude(['EMA8', 'EMA13', 'EMA21', 'EMA55', 'VWAP', 'OBV', 'price'], features);
-  await validator.validate(4, features, trainingData.slice(100).slice(-10080));
+  await validator.validate(
+    4,
+    constrainedFeatures,
+    trainingData.slice(200).map(e => ({ ...e, action: e.action === 'BUY' ? e.action : 'NOTHING' }))
+  );
   graphToImg(trainingData.slice(100));
 };
 

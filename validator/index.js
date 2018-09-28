@@ -55,7 +55,11 @@ const calculateReturns = data => {
   };
   let result = 0;
   let previousAction = 'NOTHING';
-  data.forEach(d => {
+  data.forEach((d, index) => {
+    if (data[index - 1] && data[index - 1].EMA8 > data[index - 1].EMA55 && d.EMA8 < d.EMA55) {
+      result = operate('XRPETH', 'SELL', d.price, money);
+      previousAction = d.action;
+    }
     if (previousAction !== d.action) {
       result = operate('XRPETH', d.action, d.price, money);
       previousAction = d.action;

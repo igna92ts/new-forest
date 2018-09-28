@@ -8,26 +8,19 @@ const Random = require('random-js'),
 const pickRandomElement = array => Random.pick(mt, array);
 const getSample = (size, data) => {
   const buys = data.filter(d => d.action === 'BUY');
-  const sells = data.filter(d => d.action === 'SELL');
   const nothing = data.filter(d => d.action === 'NOTHING');
   const buySample = [];
-  const sellSample = [];
   const nothingSample = [];
   const sample = [];
   // at least 20% each
-  for (let i = 0; i < size / 10; i++) {
+  for (let i = 0; i < size / 5; i++) {
     buySample.push(pickRandomElement(buys));
-    sellSample.push(pickRandomElement(sells));
     nothingSample.push(pickRandomElement(nothing));
     sample.push(pickRandomElement(data));
     sample.push(pickRandomElement(data));
     sample.push(pickRandomElement(data));
-    sample.push(pickRandomElement(data));
-    sample.push(pickRandomElement(data));
-    sample.push(pickRandomElement(data));
-    sample.push(pickRandomElement(data));
   }
-  return [...sample, ...buySample, ...sellSample, ...nothingSample];
+  return [...sample, ...buySample, ...nothingSample];
 };
 
 const SAMPLE_SIZE = 500;
