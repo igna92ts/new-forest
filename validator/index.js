@@ -1,8 +1,10 @@
 const rndForest = require('../forest'),
   { graphToImg } = require('../chart'),
+  errors = require('../errors'),
   aws = require('../amazon');
 
 const chunkArray = (myArray, folds) => {
+  if (folds > myArray.length) throw errors.defaultError('folds cant be bigger that arr length');
   const chunkSize = myArray.length / folds;
   const arrayLength = myArray.length;
   const tempArray = [];
@@ -29,6 +31,7 @@ const chain = promises => {
 
 const groupBy = (xs, key) => {
   return xs.reduce((rv, x) => {
+    if (x[key] === undefined) throw errors.defaultError('key not present');
     (rv[x[key]] = rv[x[key]] || []).push(x);
     return rv;
   }, {});
@@ -56,12 +59,15 @@ const calculateReturns = data => {
   let result = 0;
   let previousAction = 'NOTHING';
   data.forEach((d, index) => {
+    if (!d.action) throw errors.missingRequiredProperty('action');
+    if (!d.close) throw errors.missingRequiredProperty('close');
+    if (d.EMA8 === undefined || d.EMA55 === undefined) throw errors.missingRequiredProperty('EMA');
     if (data[index - 1] && data[index - 1].EMA8 > data[index - 1].EMA55 && d.EMA8 < d.EMA55) {
-      result = operate('XRPETH', 'SELL', d.price, money);
+      result = operate('XRPETH', 'SELL', d.close, money);
       previousAction = d.action;
     }
     if (previousAction !== d.action) {
-      result = operate('XRPETH', d.action, d.price, money);
+      result = operate('XRPETH', d.action, d.close, money);
       previousAction = d.action;
     }
   });
@@ -77,15 +83,15 @@ const classify = (forest, trade) => {
       });
       return res;
     },
-    { BUY: 0, NOTHING: 0, SELL: 0 }
+    { BUY: 0, NOTHING: 0 }
   );
-  return Object.keys(sum).reduce((t, k) => {
-    if (sum[k] === Math.max(...['BUY', 'NOTHING', 'SELL'].map(e => sum[e]))) return k;
-    else return t;
-  });
+  if ((sum.BUY || 0) > (sum.NOTHING || 0)) return 'BUY';
+  else return 'NOTHING';
 };
 
 const validate = (folds = 10, features, data) => {
+  if (!folds || !features || !features.length || !data.length || !data)
+    throw errors.defaultError('Missing parameters');
   const chunked = chunkArray(data, folds);
   const promises = chunked.map((chunk, index) => {
     const trainingData = mergeWithout(index, chunked);
@@ -98,26 +104,34 @@ const validate = (folds = 10, features, data) => {
   return chain(promises).then(() => aws.uploadData(chunked, 'validation-chunks'));
 };
 
+const compareWithOutOfBag = (results, outOfFold) => {
+  if (results.length !== outOfFold.length) throw errors.defaultError('both params must be of same length');
+  const sum = outOfFold.reduce((res, c, i) => {
+    if (!c.action) throw errors.missingRequiredProperty('action');
+    if (c.action === results[i]) return res + 1;
+    else return res;
+  }, 0);
+  return sum / outOfFold.length;
+};
+
+const validateFold = (outOfFold, forest, fold) => {
+  const predictionResults = outOfFold.map(c => classify(forest, c));
+  const compare = compareWithOutOfBag(predictionResults, outOfFold);
+  graphToImg(outOfFold, `training-${fold}`);
+  const expectedReturns = calculateReturns(outOfFold);
+  const predictedData = outOfFold.map((c, index) => ({ ...c, action: predictionResults[index] }));
+  graphToImg(predictedData, `predicted-${fold}`);
+  const predictedReturns = calculateReturns(predictedData);
+  return { compare, predictedReturns, expectedReturns };
+};
+
 const validateResult = async () => {
   const trees = await aws.downloadTrees();
   const groupedTrees = groupBy(trees, 'fold');
   const chunks = await aws.getData('validation-chunks');
-
-  const comparisons = Object.keys(groupedTrees).map(fold => {
-    const forest = groupedTrees[fold].map(t => t.tree);
-    const results = chunks[fold].map(c => classify(forest, c));
-    const compare =
-      chunks[fold].reduce((sum, c, i) => {
-        if (c.action === results[i]) return sum + 1;
-        else return sum;
-      }, 0) / chunks[fold].length;
-    graphToImg(chunks[fold], `training-${fold}`);
-    const expectedReturns = calculateReturns(chunks[fold]);
-    const predictedData = chunks[fold].map((c, index) => ({ ...c, action: results[index] }));
-    graphToImg(predictedData, `predicted-${fold}`);
-    const predictedReturns = calculateReturns(predictedData);
-    return { compare, predictedReturns, expectedReturns };
-  });
+  const comparisons = Object.keys(groupedTrees).map(fold =>
+    validateFold(chunks[fold], groupedTrees[fold].map(t => t.tree), fold)
+  );
   console.log(
     JSON.stringify(comparisons, 0, 2),
     JSON.stringify(
@@ -132,4 +146,15 @@ const validateResult = async () => {
   );
 };
 
-module.exports = { validate, validateResult };
+module.exports = {
+  validate,
+  validateResult,
+  chunkArray,
+  mergeWithout,
+  chain,
+  groupBy,
+  classify,
+  compareWithOutOfBag,
+  validateFold,
+  calculateReturns
+};

@@ -37,12 +37,12 @@ const getKLineHistory = (symbol, limit = 100, endTime) => {
     .then(kLineData =>
       kLineData.map(k => ({
         id: k[0],
-        highPrice: parseFloat(k[2]),
-        lowPrice: parseFloat(k[3]),
-        price: parseFloat(k[4]),
+        high: parseFloat(k[2]),
+        low: parseFloat(k[3]),
+        close: parseFloat(k[4]),
         closeTime: k[6],
         volume: parseFloat(k[5]),
-        openPrice: parseFloat(k[1])
+        open: parseFloat(k[1])
       }))
     )
     .catch(console.log);

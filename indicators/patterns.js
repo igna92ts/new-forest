@@ -1,93 +1,93 @@
 const patterns = require('technicalindicators');
 
-const getPeriodInput = (index, historic, period) => {
+exports.getPeriodInput = (index, historic, period) => {
   const nDayInput = historic.slice(index + 1 - period, index + 1); // +1 to include current
   if (nDayInput.length < period) return null;
-  const close = nDayInput.map(t => t.price);
-  const open = nDayInput.map(t => t.openPrice);
-  const high = nDayInput.map(t => t.highPrice);
-  const low = nDayInput.map(t => t.lowPrice);
+  const close = nDayInput.map(t => t.close);
+  const open = nDayInput.map(t => t.open);
+  const high = nDayInput.map(t => t.high);
+  const low = nDayInput.map(t => t.low);
   return { close, open, high, low };
 };
 
-const functions = {
+exports.functions = {
   ABANDONEDBABY: (historic, index) => {
-    const threeDayInput = getPeriodInput(index, historic, 3);
+    const threeDayInput = exports.getPeriodInput(index, historic, 3);
     if (!threeDayInput) return false;
     return patterns.abandonedbaby(threeDayInput);
   },
   DARKCLOUDCOVER: (historic, index) => {
-    const twoDayInput = getPeriodInput(index, historic, 2);
+    const twoDayInput = exports.getPeriodInput(index, historic, 2);
     if (!twoDayInput) return false;
     return patterns.darkcloudcover(twoDayInput);
   },
   DOWNSIDETSUKIGAP: (historic, index) => {
-    const threeDayInput = getPeriodInput(index, historic, 3);
+    const threeDayInput = exports.getPeriodInput(index, historic, 3);
     if (!threeDayInput) return false;
     return patterns.downsidetasukigap(threeDayInput);
   },
   BULLISHHARAMI: (historic, index) => {
-    const twoDayInput = getPeriodInput(index, historic, 2);
+    const twoDayInput = exports.getPeriodInput(index, historic, 2);
     if (!twoDayInput) return false;
     return patterns.bullishharami(twoDayInput);
   },
   BEARISHHARAMI: (historic, index) => {
-    const twoDayInput = getPeriodInput(index, historic, 2);
+    const twoDayInput = exports.getPeriodInput(index, historic, 2);
     if (!twoDayInput) return false;
     return patterns.bearishharami(twoDayInput);
   },
   BULLISHHARAMICROSS: (historic, index) => {
-    const twoDayInput = getPeriodInput(index, historic, 2);
+    const twoDayInput = exports.getPeriodInput(index, historic, 2);
     if (!twoDayInput) return false;
     return patterns.bullishharamicross(twoDayInput);
   },
   BEARISHHARAMICROSS: (historic, index) => {
-    const twoDayInput = getPeriodInput(index, historic, 2);
+    const twoDayInput = exports.getPeriodInput(index, historic, 2);
     if (!twoDayInput) return false;
     return patterns.bearishharamicross(twoDayInput);
   },
   EVENINGDOJISTAR: (historic, index) => {
-    const threeDayInput = getPeriodInput(index, historic, 3);
+    const threeDayInput = exports.getPeriodInput(index, historic, 3);
     if (!threeDayInput) return false;
     return patterns.eveningdojistar(threeDayInput);
   },
   EVENINGSTAR: (historic, index) => {
-    const threeDayInput = getPeriodInput(index, historic, 3);
+    const threeDayInput = exports.getPeriodInput(index, historic, 3);
     if (!threeDayInput) return false;
     return patterns.eveningstar(threeDayInput);
   },
   PIERCINGLINE: (historic, index) => {
-    const twoDayInput = getPeriodInput(index, historic, 2);
+    const twoDayInput = exports.getPeriodInput(index, historic, 2);
     if (!twoDayInput) return false;
     return patterns.piercingline(twoDayInput);
   },
   MORNINGDOJISTAR: (historic, index) => {
-    const threeDayInput = getPeriodInput(index, historic, 3);
+    const threeDayInput = exports.getPeriodInput(index, historic, 3);
     if (!threeDayInput) return false;
     return patterns.morningdojistar(threeDayInput);
   },
   MORNINGSTAR: (historic, index) => {
-    const threeDayInput = getPeriodInput(index, historic, 3);
+    const threeDayInput = exports.getPeriodInput(index, historic, 3);
     if (!threeDayInput) return false;
     return patterns.morningstar(threeDayInput);
   },
   THREEBLACKCROWS: (historic, index) => {
-    const threeDayInput = getPeriodInput(index, historic, 3);
+    const threeDayInput = exports.getPeriodInput(index, historic, 3);
     if (!threeDayInput) return false;
     return patterns.threeblackcrows(threeDayInput);
   },
   THREEWHITESOLDIERS: (historic, index) => {
-    const threeDayInput = getPeriodInput(index, historic, 3);
+    const threeDayInput = exports.getPeriodInput(index, historic, 3);
     if (!threeDayInput) return false;
     return patterns.threewhitesoldiers(threeDayInput);
   },
   BEARISHENGULFING: (historic, index) => {
-    const twoDayInput = getPeriodInput(index, historic, 2);
+    const twoDayInput = exports.getPeriodInput(index, historic, 2);
     if (!twoDayInput) return false;
     return patterns.bearishengulfingpattern(twoDayInput);
   },
   BULLISHENGULFING: (historic, index) => {
-    const twoDayInput = getPeriodInput(index, historic, 2);
+    const twoDayInput = exports.getPeriodInput(index, historic, 2);
     if (!twoDayInput) return false;
     return patterns.bullishengulfingpattern(twoDayInput);
   }
@@ -151,11 +151,10 @@ const functions = {
 
 exports.detectPatterns = historic => {
   return historic.map((h, index) => {
-    console.log(index);
     return {
       ...h,
-      ...Object.keys(functions).reduce((res, key) => {
-        return { ...res, [key]: functions[key](historic, index) };
+      ...Object.keys(exports.functions).reduce((res, key) => {
+        return { ...res, [key]: exports.functions[key](historic, index) };
       }, {})
     };
   });

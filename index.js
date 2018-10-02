@@ -13,15 +13,14 @@ const expectedAction = trades => {
     if (t.action) return [...res, t];
     const newTrades = trades.slice(index + 1); // trades after this one
     if (newTrades.length === 0) return [...res, { ...t, action: 'NOTHING' }];
-    if (newTrades[0].price >= t.price) {
+    if (newTrades[0].close >= t.close) {
       let under55 = true;
       let accumulated = 0;
       let average = 0;
       for (let i = 0; i < newTrades.length; i++) {
-        accumulated += newTrades[i].price;
+        accumulated += newTrades[i].close;
         average = accumulated / (i + 1);
-        // if (average < t.realPrice) return [...res, { ...t, action: 'NOTHING' }];
-        if (newTrades[i].price > accumulatedFees(t.price)) {
+        if (newTrades[i].close > accumulatedFees(t.close)) {
           return [
             ...res,
             {
@@ -34,12 +33,12 @@ const expectedAction = trades => {
         if (newTrades[i].EMA8 < newTrades[i].EMA55) under55 = false;
       }
       return [...res, { ...t, action: 'NOTHING' }];
-    } else if (newTrades[0].price < t.price) {
+    } else if (newTrades[0].close < t.close) {
       const ahead = 5;
       const nextTrades = newTrades.slice(0, ahead);
       if (nextTrades.length === ahead) {
-        const avgNext = nextTrades.reduce((sum, e) => sum + e.price, 0) / ahead;
-        if (avgNext < t.price && nextTrades.some(n => n.EMA8 < n.EMA55)) {
+        const avgNext = nextTrades.reduce((sum, e) => sum + e.close, 0) / ahead;
+        if (avgNext < t.close && nextTrades.some(n => n.EMA8 < n.EMA55)) {
           return [...res, { ...t, action: 'SELL' }];
         }
       }
@@ -56,17 +55,24 @@ const exclude = (excludeProps, features) => {
 };
 
 const run = async () => {
-  const symbol = 'XRPETH';
-  const historic = await fetchKLines(symbol, 10000);
-  const { advancedHistoric, features } = advancedFeatures(historic);
-  const trainingData = expectedAction(advancedHistoric);
-  const constrainedFeatures = exclude(['EMA8', 'EMA13', 'EMA21', 'EMA55', 'VWAP', 'OBV', 'price'], features);
-  await validator.validate(
-    4,
-    constrainedFeatures,
-    trainingData.slice(200).map(e => ({ ...e, action: e.action === 'BUY' ? e.action : 'NOTHING' }))
-  );
-  graphToImg(trainingData.slice(100));
+  try {
+    const symbol = 'XRPETH';
+    const historic = await fetchKLines(symbol, 1000);
+    const { advancedHistoric, features } = advancedFeatures(historic);
+    const trainingData = expectedAction(advancedHistoric);
+    const constrainedFeatures = exclude(
+      ['LOWERBB21', 'UPPERBB21', 'MIDDLEBB21', 'EMA8', 'EMA13', 'EMA21', 'EMA55', 'VWAP', 'OBV', 'close'],
+      features
+    );
+    await validator.validate(
+      4,
+      constrainedFeatures,
+      trainingData.slice(200).map(e => ({ ...e, action: e.action === 'BUY' ? e.action : 'NOTHING' }))
+    );
+    graphToImg(trainingData.slice(100));
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 run();
