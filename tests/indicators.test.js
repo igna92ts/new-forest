@@ -726,6 +726,50 @@ describe('INDEX', () => {
   describe('advancedFeatures', () => {
     const { features, advancedHistoric } = advancedFeatures(testData);
     const expectedFeatures = [
+      'RSI14',
+      'ADX14',
+      'MDI14',
+      'PDI14',
+      'MFI14',
+      'PERCENTB21',
+      'STOCHK14',
+      'STOCHD14',
+      'VO',
+      'PERCENTCHANGE',
+      'PERCENTLOWERBB21',
+      'PERCENTMIDDLEBB21',
+      'PERCENTUPPERBB21',
+      'ORDEREDEMA',
+      'PERCENTEMA8',
+      'PERCENTEMA13',
+      'PERCENTEMA21',
+      'PERCENTEMA55',
+      'PERCENTVWAP',
+      'ABANDONEDBABY',
+      'DARKCLOUDCOVER',
+      'DOWNSIDETSUKIGAP',
+      'BULLISHHARAMI',
+      'BEARISHHARAMI',
+      'BULLISHHARAMICROSS',
+      'BEARISHHARAMICROSS',
+      'EVENINGDOJISTAR',
+      'EVENINGSTAR',
+      'PIERCINGLINE',
+      'MORNINGDOJISTAR',
+      'MORNINGSTAR',
+      'THREEBLACKCROWS',
+      'THREEWHITESOLDIERS',
+      'BEARISHENGULFING',
+      'BULLISHENGULFING'
+    ];
+    const expectedKeys = [
+      'id',
+      'high',
+      'low',
+      'close',
+      'closeTime',
+      'volume',
+      'open',
       'EMA8',
       'EMA13',
       'EMA21',
@@ -768,8 +812,10 @@ describe('INDEX', () => {
       'THREEBLACKCROWS',
       'THREEWHITESOLDIERS',
       'BEARISHENGULFING',
-      'BULLISHENGULFING'
+      'BULLISHENGULFING',
+      'action'
     ];
     expect(features).toEqual(expectedFeatures);
+    expect(Object.keys(advancedHistoric[0])).toEqual(expectedKeys);
   });
 });

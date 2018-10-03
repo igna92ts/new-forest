@@ -56,7 +56,7 @@ const calculateReturns = data => {
   const money = {
     ETH: 5
   };
-  let result = 0;
+  let result = 5;
   let previousAction = 'NOTHING';
   data.forEach((d, index) => {
     if (!d.action) throw errors.missingRequiredProperty('action');
@@ -114,15 +114,31 @@ const compareWithOutOfBag = (results, outOfFold) => {
   return sum / outOfFold.length;
 };
 
+const addSells = data => {
+  let previousAction = 'NOTHING';
+  return data.map((d, index) => {
+    if (d.EMA8 === undefined || d.EMA55 === undefined) throw errors.missingRequiredProperty('EMA');
+    if (data[index - 1] && data[index - 1].EMA8 > data[index - 1].EMA55 && d.EMA8 < d.EMA55) {
+      previousAction = d.action;
+      return { ...d, action: 'SELL' };
+    }
+    if (previousAction !== d.action) {
+      previousAction = d.action;
+      return d;
+    }
+    return { ...d, action: 'NOTHING' };
+  });
+};
+
 const validateFold = (outOfFold, forest, fold) => {
   const predictionResults = outOfFold.map(c => classify(forest, c));
-  const compare = compareWithOutOfBag(predictionResults, outOfFold);
-  graphToImg(outOfFold, `training-${fold}`);
+  const accuracy = compareWithOutOfBag(predictionResults, outOfFold);
+  graphToImg(addSells(outOfFold), `training-${fold}`);
   const expectedReturns = calculateReturns(outOfFold);
   const predictedData = outOfFold.map((c, index) => ({ ...c, action: predictionResults[index] }));
-  graphToImg(predictedData, `predicted-${fold}`);
+  graphToImg(addSells(predictedData), `predicted-${fold}`);
   const predictedReturns = calculateReturns(predictedData);
-  return { compare, predictedReturns, expectedReturns };
+  return { accuracy, predictedReturns, expectedReturns };
 };
 
 const validateResult = async () => {
@@ -132,18 +148,12 @@ const validateResult = async () => {
   const comparisons = Object.keys(groupedTrees).map(fold =>
     validateFold(chunks[fold], groupedTrees[fold].map(t => t.tree), fold)
   );
-  console.log(
-    JSON.stringify(comparisons, 0, 2),
-    JSON.stringify(
-      {
-        accuracy: comparisons.reduce((a, b) => a + b.compare, 0) / Object.keys(groupedTrees).length,
-        predictedReturns: comparisons.reduce((a, b) => a + b.predictedReturns, 0) / comparisons.length,
-        expectedReturns: comparisons.reduce((a, b) => a + b.expectedReturns, 0) / comparisons.length
-      },
-      0,
-      2
-    )
-  );
+  const avg = {
+    accuracy: comparisons.reduce((a, b) => a + b.accuracy, 0) / Object.keys(groupedTrees).length,
+    predictedReturns: comparisons.reduce((a, b) => a + b.predictedReturns, 0) / comparisons.length,
+    expectedReturns: comparisons.reduce((a, b) => a + b.expectedReturns, 0) / comparisons.length
+  };
+  return { avg, folds: comparisons };
 };
 
 module.exports = {

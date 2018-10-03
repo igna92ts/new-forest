@@ -41,7 +41,7 @@ const buildTree = (features, fold, count) => {
     .catch(err => logger.error(err));
 };
 
-const FOREST_SIZE = 1;
+const FOREST_SIZE = 1024;
 const buildForest = (features, fold) => {
   const forestPromises = [];
   const forestSize = FOREST_SIZE;

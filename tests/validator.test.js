@@ -1,8 +1,10 @@
 jest.mock('../amazon');
 jest.mock('../forest');
+jest.mock('../chart');
 const {
     calculateReturns,
     validateFold,
+    validateResult,
     compareWithOutOfBag,
     validate,
     chunkArray,
@@ -13,6 +15,7 @@ const {
   } = require('../validator'),
   errors = require('../errors'),
   rndForest = require('../forest'),
+  { graphToImg } = require('../chart'),
   aws = require('../amazon');
 
 describe('VALIDATOR', () => {
@@ -161,18 +164,36 @@ describe('VALIDATOR', () => {
     });
   });
 
-  // describe('validateFold', () => {
-  //   test('it should calculate accuracy, predictedReturns and expectedReturns', () => {
-  //     const result = validateFold(
-  //       [{ action: 'BUY' }, { action: 'BUY' }],
-  //       [
-  //         newValue => ({ NOTHING: 1 }),
-  //         newValue => ({ BUY: 0.5, NOTHING: 0.5 }),
-  //         newValue => ({ NOTHING: 1 })
-  //       ],
-  //       0
-  //     );
-  //     console.log(result);
-  //   });
-  // });
+  describe('validateFold', () => {
+    test('it should calculate accuracy, predictedReturns and expectedReturns', () => {
+      const result = validateFold(
+        [{ action: 'BUY', close: 1, EMA8: 1, EMA55: 2 }, { action: 'NOTHING', close: 1, EMA8: 2, EMA55: 1 }],
+        [
+          newValue => ({ NOTHING: 1 }),
+          newValue => ({ BUY: 0.5, NOTHING: 0.5 }),
+          newValue => ({ NOTHING: 1 })
+        ],
+        0
+      );
+      expect(result.accuracy).toBe(0.5);
+      expect(result.predictedReturns).toBe(5);
+      expect(result.expectedReturns).toBe(4.9995004995005);
+      expect(graphToImg.mock.calls.length).toBe(2);
+    });
+  });
+
+  describe('validateResult', () => {
+    test('it should work', async done => {
+      const results = await validateResult();
+      results.folds.forEach(r => {
+        expect(r.accuracy).toBe(0.5);
+        expect(r.predictedReturns).toBe(5);
+        expect(r.expectedReturns).toBe(4.9995004995005);
+      });
+      expect(results.avg.accuracy).toBe(0.5);
+      expect(results.avg.predictedReturns).toBe(5);
+      expect(results.avg.expectedReturns).toBe(4.9995004995005);
+      done();
+    });
+  });
 });

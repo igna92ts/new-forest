@@ -1,6 +1,6 @@
 const http = require('http'),
   socketio = require('socket.io'),
-  plotly = require('plotly')('igna92ts', 'Bo8oB339TxAmrjQn5sBa'),
+  plotly = require('plotly')('igna92ts', 'RN0DdzqHUxNglJiMPRgr'),
   fs = require('fs');
 
 exports.setGraphingServer = () => {
@@ -60,14 +60,14 @@ exports.graphToImg = (kLineArr, fileName = 'plot') => {
     },
     {
       x: kLineArr.filter(k => k.action && k.action === 'BUY').map(k => new Date(k.id)),
-      y: kLineArr.filter(k => k.action && k.action === 'BUY').map(k => k.price),
+      y: kLineArr.filter(k => k.action && k.action === 'BUY').map(k => k.close),
       mode: 'markers',
       name: 'BUY',
-      marker: { color: '#FF0000', size: 12 }
+      marker: { color: '#FF0000' }
     },
     {
       x: kLineArr.filter(k => k.action && k.action === 'SELL').map(k => new Date(k.id)),
-      y: kLineArr.filter(k => k.action && k.action === 'SELL').map(k => k.price),
+      y: kLineArr.filter(k => k.action && k.action === 'SELL').map(k => k.close),
       mode: 'markers',
       name: 'SELL',
       marker: { color: '#000000' }
@@ -123,16 +123,16 @@ exports.graphToImg = (kLineArr, fileName = 'plot') => {
       line: { color: '#FF0000' },
       xaxis: 'x3',
       yaxis: 'y3'
-    },
-    {
-      x: dates,
-      y: kLineArr.map(k => k.MFI14),
-      mode: 'lines',
-      name: 'MFI14',
-      line: { color: '#00FF00' },
-      xaxis: 'x3',
-      yaxis: 'y3'
     }
+    // {
+    //   x: dates,
+    //   y: kLineArr.map(k => k.MFI14),
+    //   mode: 'lines',
+    //   name: 'MFI14',
+    //   line: { color: '#00FF00' },
+    //   xaxis: 'x3',
+    //   yaxis: 'y3'
+    // }
   ];
   const layout = {
     yaxis: { domain: [0, 0.266] },
